@@ -3,26 +3,31 @@ import fx from "glfx";
 import { WebcamCapture } from "./WebcamCapture";
 
 const App = () => {
-  const [denoiseLevel, setDenoiseLevel] = useState(255);
-  const [inkLevel, setInkLevel] = useState(1);
+  const [fxCanvas, setFxCanvas] = useState(null);
+  const [denoiseLevel, setDenoiseLevel] = useState(150);
+  const [inkLevel, setInkLevel] = useState(0.5);
   const [frameCount, setFrameCount] = useState(0);
   const [sourceImg, setSourceImg] = useState(null);
   const canvasRef = useRef(null);
   // const experimentCanvasRef = React.useRef(null);
 
   useEffect(() => {
-    if (sourceImg) {
-      var canvas = fx.canvas();
-      var texture = canvas.texture(sourceImg);
+    if (!fxCanvas) setFxCanvas(fx.canvas());
+  }, [fxCanvas]);
+
+  useEffect(() => {
+    if (sourceImg && fxCanvas) {
+      // var canvas = fx.canvas();
+      var texture = fxCanvas.texture(sourceImg);
 
       // apply the ink filter //edgeWork
-      canvas.draw(texture).denoise(denoiseLevel).ink(inkLevel).update();
+      fxCanvas.draw(texture).denoise(denoiseLevel).ink(inkLevel).update();
 
       // remove everything, but lines
-      const inkCanvas = createInkCanvas(canvas);
+      const inkCanvas = createInkCanvas(fxCanvas);
 
       const displayCanvas = canvasRef.current;
-      drawCanvasToCanvas(inkCanvas, displayCanvas);
+      drawCanvasToCanvas(inkCanvas, displayCanvas, 3);
     }
 
     // eslint-disable-next-line
@@ -34,24 +39,31 @@ const App = () => {
   return (
     <div className="app">
       <div>
-        INK:{" "}
-        <input
-          type="range"
-          min="0"
-          max="1"
-          step="0.01"
-          value={inkLevel}
-          onChange={onInkLevelChange}
-        />
-        DENOISE:{" "}
-        <input
-          type="range"
-          min="0"
-          max="255"
-          step="1"
-          value={denoiseLevel}
-          onChange={onDenoiseLevel}
-        />
+        <span style={{ marginRight: 20 }}>
+          INK:{" "}
+          <input
+            type="range"
+            min="0"
+            max="1"
+            step="0.01"
+            value={inkLevel}
+            onChange={onInkLevelChange}
+          />
+          {inkLevel}
+        </span>
+
+        <span>
+          DENOISE:{" "}
+          <input
+            type="range"
+            min="0"
+            max="255"
+            step="1"
+            value={denoiseLevel}
+            onChange={onDenoiseLevel}
+          />
+          {denoiseLevel}
+        </span>
       </div>
 
       <canvas ref={canvasRef} />
